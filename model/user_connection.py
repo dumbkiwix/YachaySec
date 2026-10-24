@@ -17,6 +17,28 @@ class UserConnection:
         """,data)
             self.conn.commit()
 
+    def read_all(self):
+        with self.conn.cursor() as cur:
+            cur.execute('SELECT id, name, phone FROM "user" ORDER BY id ASC')
+            records = cur.fetchall()
+            # Convertir las tuplas devueltas por PostgreSQL en una lista de diccionarios
+            users = [{"id": row[0], "name": row[1], "phone": row[2]} for row in records]
+            return users
+                
+    def update(self, user_id: int, data: dict):
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                UPDATE "user" 
+                SET name = COALESCE(%(name)s, name), 
+                    phone = COALESCE(%(phone)s, phone) 
+                WHERE id = %(id)s
+            """, {**data, "id": user_id})
+            self.conn.commit()
+
+    def delete(self, user_id: int):
+        with self.conn.cursor() as cur:
+            cur.execute('DELETE FROM "user" WHERE id = %s', (user_id,))
+            self.conn.commit()
 
 
     def __del__(self):
